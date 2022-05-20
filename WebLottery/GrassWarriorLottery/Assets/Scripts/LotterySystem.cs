@@ -10,6 +10,11 @@ namespace KID
     /// </summary>
     public class LotterySystem : MonoBehaviour
     {
+        [SerializeField, Header("隨機音效")]
+        private AudioClip soundRandom;
+        [SerializeField, Header("中獎音效")]
+        private AudioClip soundGetGift;
+
         /// <summary>
         /// 抽獎按鈕
         /// </summary>
@@ -26,6 +31,14 @@ namespace KID
         /// 抽獎介面
         /// </summary>
         private CanvasGroup groupLottery;
+        /// <summary>
+        /// 抽獎提示
+        /// </summary>
+        private TextMeshProUGUI tmpLotteryTip;
+
+        private AudioSource aud;
+
+        private float volumeRandom { get => Random.Range(0.9f, 1.2f); }
 
         private string[] lotteryContent =
         {
@@ -53,10 +66,13 @@ namespace KID
 
         private void Awake()
         {
+            aud = GetComponent<AudioSource>();
+
             btnLottery = GameObject.Find("抽獎按鈕").GetComponent<Button>();
             btnLotteryReplay = GameObject.Find("重新抽獎按鈕").GetComponent<Button>();
             tmpLotteryContent = GameObject.Find("抽獎內容").GetComponent<TextMeshProUGUI>();
             groupLottery = GameObject.Find("抽獎介面").GetComponent<CanvasGroup>();
+            tmpLotteryTip = GameObject.Find("抽獎提示").GetComponent<TextMeshProUGUI>();
 
             btnLottery.onClick.AddListener(() => { StartCoroutine(Lottery()); });
             btnLotteryReplay.onClick.AddListener(() => { StartCoroutine(LotteryReplay()); });
@@ -78,6 +94,7 @@ namespace KID
             for (int i = 0; i < 20; i++)
             {
                 tmpLotteryContent.text = lotteryContent[i % lotteryContent.Length];
+                aud.PlayOneShot(soundRandom, volumeRandom);
                 yield return new WaitForSeconds(0.1f);
             }
 
@@ -88,12 +105,15 @@ namespace KID
                     tmpLotteryContent.text = lotteryContent[i];
 
                     float random = Random.value;
-                    print(random);
+                    aud.PlayOneShot(soundRandom, volumeRandom);
 
                     if (random <= probiblity[i])
                     {
                         getGift = true;
                         btnLotteryReplay.interactable = true;
+                        tmpLotteryTip.enabled = true;
+                        print(random);
+                        aud.PlayOneShot(soundGetGift, 1.3f);
                         StopAllCoroutines();
                     }
 
@@ -105,6 +125,7 @@ namespace KID
         private IEnumerator LotteryReplay()
         {
             btnLotteryReplay.interactable = false;
+            tmpLotteryTip.enabled = false;
             getGift = false;
 
             groupLottery.interactable = false;
